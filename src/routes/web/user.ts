@@ -29,12 +29,19 @@ router.post(
     try {
       const userData = req.body;
 
+      console.log('Received data:', userData);
+
       const newUser = await createUser(userData);
 
+      if (!newUser) {
+        // In case newUser is undefined or null
+        return res.status(400).json({ error: 'Failed to create user.' });
+      }
+
       res.status(201).json(newUser);
-    } catch (error) {
-      console.error('Error creating user:', error);
-      next(error);
+    } catch (error: any) {
+      console.error('Error creating user:', error.message || error);
+      res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
   }
 );

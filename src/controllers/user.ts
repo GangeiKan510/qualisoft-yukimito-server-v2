@@ -29,8 +29,7 @@ export const createUser = async (body: UserProps) => {
     });
 
     return newUser;
-  } catch (error) {
-    console.error('Error creating user:', error);
-    throw error;
+  } catch (error: any) {
+    throw new Error(`Failed to create user: ${error.message || error}`);
   }
 };
