@@ -15,9 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/web', webRouter);
 
-app.get('/', (req: Request, res: Response) =>
-  res.send('OnlyFrogs StyleSync Server')
-);
+app.get('/', (req: Request, res: Response) => res.send('Yukimito Server'));
 
 app.listen(port, async () => {
   try {
