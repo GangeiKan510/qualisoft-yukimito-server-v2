@@ -4,7 +4,11 @@ import {
   InstantBookingSchema,
 } from '../../validators/schemas/schemas';
 import { validate } from '../../validators/validate';
-import { createBooking, createInstantBooking } from '../../controllers/booking';
+import {
+  createBooking,
+  createInstantBooking,
+  getAllBookings,
+} from '../../controllers/booking';
 
 const router = Router();
 
@@ -32,6 +36,7 @@ router.post(
   }
 );
 
+// Endpoint for creating an Instant Booking
 router.post(
   '/create-instant-booking',
   validate(InstantBookingSchema),
@@ -56,6 +61,17 @@ router.post(
     }
   }
 );
+
+// Endpoint for getting all bookings (both regular and instant)
+router.get('/bookings', async (req: Request, res: Response) => {
+  try {
+    const allBookings = await getAllBookings();
+    res.status(200).json(allBookings);
+  } catch (error: any) {
+    console.error('Error fetching bookings:', error.message || error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
 
 router.get('/', (req: Request, res: Response) => {
   res.send('Web file router');

@@ -70,3 +70,30 @@ export const createInstantBooking = async (body: BookingProps) => {
     );
   }
 };
+
+export const getAllBookings = async () => {
+  try {
+    const regularBookings = await prisma.booking.findMany({
+      include: {
+        pets: true,
+      },
+    });
+
+    const instantBookings = await prisma.instantBooking.findMany();
+
+    const allBookings = [
+      ...regularBookings.map((booking) => ({
+        ...booking,
+        type: 'regular',
+      })),
+      ...instantBookings.map((booking) => ({
+        ...booking,
+        type: 'instant',
+      })),
+    ];
+
+    return allBookings;
+  } catch (error: any) {
+    throw new Error(`Failed to get all bookings: ${error.message || error}`);
+  }
+};
