@@ -8,6 +8,13 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+model Yukimito {
+  id     String @id @unique @default(uuid())
+  serial Int    @unique @default(autoincrement())
+
+  total_pets_checked_in Int @default(0)
+}
+
 model User {
   id     String @id @unique @default(uuid())
   serial Int    @unique @default(autoincrement())
