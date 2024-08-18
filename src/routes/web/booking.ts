@@ -8,6 +8,7 @@ import {
   createBooking,
   createInstantBooking,
   getAllBookings,
+  getAvailability,
 } from '../../controllers/booking';
 
 const router = Router();
@@ -69,6 +70,17 @@ router.get('/bookings', async (req: Request, res: Response) => {
     res.status(200).json(allBookings);
   } catch (error: any) {
     console.error('Error fetching bookings:', error.message || error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+// Endpoint for checking availability
+router.get('/availability', async (req: Request, res: Response) => {
+  try {
+    const isAvailable = await getAvailability();
+    res.status(200).json({ available: isAvailable });
+  } catch (error: any) {
+    console.error('Error checking availability:', error.message || error);
     res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 });

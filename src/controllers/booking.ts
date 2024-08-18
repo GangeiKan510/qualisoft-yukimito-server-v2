@@ -21,7 +21,7 @@ export const createBooking = async (body: BookingProps) => {
             birth_date: pet.birth_date,
             size: pet.size,
             vaccine_photo: pet.vaccine_photo,
-            userId: body.user_id, // Linking to the correct user
+            userId: body.user_id,
           })),
         },
 
@@ -95,5 +95,35 @@ export const getAllBookings = async () => {
     return allBookings;
   } catch (error: any) {
     throw new Error(`Failed to get all bookings: ${error.message || error}`);
+  }
+};
+
+export const getAvailability = async () => {
+  try {
+    const regularBookings = await prisma.booking.findMany({
+      include: {
+        pets: true,
+      },
+    });
+
+    const instantBookings = await prisma.instantBooking.findMany();
+
+    const regularPetsCount = regularBookings.reduce(
+      (count, booking) => count + booking.pets.length,
+      0
+    );
+
+    const instantPetsCount = instantBookings.reduce(
+      (count, booking) => count + booking.raw_pet_data.length,
+      0
+    );
+
+    const totalPetsCount = regularPetsCount + instantPetsCount;
+
+    const isAvailable = totalPetsCount < 36;
+
+    return isAvailable;
+  } catch (error: any) {
+    throw new Error(`Failed to check availability: ${error.message || error}`);
   }
 };
