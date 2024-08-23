@@ -11,6 +11,22 @@ export const UserSchema = z.object({
   email: z.string().email({ message: 'Email must be a valid email address' }),
 });
 
+export const UpdateUserSchema = z.object({
+  email: z
+    .string()
+    .email({ message: 'Email must be a valid email address' })
+    .optional(),
+  name: z.string().nonempty({ message: 'Name cannot be empty' }).optional(),
+  phone: z
+    .string()
+    .nonempty({ message: 'Phone number cannot be empty' })
+    .optional(),
+  address: z
+    .string()
+    .nonempty({ message: 'Address cannot be empty' })
+    .optional(),
+});
+
 export const PetSchema = z.object({
   name: z.string().nonempty({ message: 'Pet name is required' }),
   size: z.string().nonempty({ message: 'Pet size is required' }),

@@ -33,3 +33,25 @@ export const createUser = async (body: UserProps) => {
     throw new Error(`Failed to create user: ${error.message || error}`);
   }
 };
+
+export const updateUser = async (
+  email: string,
+  updateData: Partial<UserProps>
+) => {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: {
+        name: updateData.name,
+        phone: updateData.phone,
+        address: updateData.address,
+        updatedAt: new Date(),
+      },
+    });
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error('Error updating user:', error);
+    throw new Error(`Failed to update user: ${error.message || error}`);
+  }
+};

@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
-import { createUser, getUserByEmail } from '../../controllers/user';
-import { UserSchema } from '../../validators/schemas/schemas';
+import { createUser, getUserByEmail, updateUser } from '../../controllers/user';
+import { UpdateUserSchema, UserSchema } from '../../validators/schemas/schemas';
 import { validate } from '../../validators/validate';
 
 const router = Router();
@@ -41,6 +41,23 @@ router.post(
       res.status(201).json(newUser);
     } catch (error: any) {
       console.error('Error creating user:', error.message || error);
+      res.status(500).json({ error: error.message || 'Internal Server Error' });
+    }
+  }
+);
+
+router.post(
+  '/update-user',
+  validate(UpdateUserSchema),
+  async (req: Request, res: Response, next) => {
+    try {
+      const { email, ...updateData } = req.body;
+
+      const updatedUser = await updateUser(email, updateData);
+
+      res.status(200).json(updatedUser);
+    } catch (error: any) {
+      console.error('Error updating user:', error.message || error);
       res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
   }
