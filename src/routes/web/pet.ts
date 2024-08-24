@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import axios from 'axios';
 import FormData from 'form-data';
-import { createPet } from '../../controllers/pet';
+import { createPet, getAllPetsByUserId } from '../../controllers/pet';
 import { PetSchema } from '../../validators/schemas/schemas';
 import { validate } from '../../validators/validate';
 import { ZodError } from 'zod';
@@ -78,5 +78,17 @@ router.post(
     }
   }
 );
+
+router.post('/my-pets', async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    const pets = await getAllPetsByUserId(userId);
+    res.status(200).json(pets);
+  } catch (error: any) {
+    console.error('Error fetching user pets:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
 
 export default router;

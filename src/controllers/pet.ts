@@ -20,3 +20,18 @@ export const createPet = async (userId: string, petData: PetProps) => {
     throw new Error(`Failed to create pet: ${error.message || error}`);
   }
 };
+
+export const getAllPetsByUserId = async (userId: string) => {
+  try {
+    const pets = await prisma.pet.findMany({
+      where: {
+        userId: userId,
+      },
+    });
+
+    return pets;
+  } catch (error: any) {
+    console.error('Error fetching pets:', error);
+    throw new Error(`Failed to fetch pets: ${error.message || error}`);
+  }
+};
