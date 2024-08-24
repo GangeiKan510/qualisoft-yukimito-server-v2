@@ -38,7 +38,7 @@ router.post(
         formData.append('folder', 'vaccines');
 
         const response = await axios.post(
-          'http://localhost:8080/web/images/upload',
+          `${process.env.PUBLIC_API_SERVER}/web/images/upload`,
           formData,
           {
             headers: {

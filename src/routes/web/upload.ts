@@ -11,16 +11,12 @@ import firebaseConfig from '../../config/firebase.config';
 
 const router: Router = express.Router();
 
-// Initialize a Firebase application
 initializeApp(firebaseConfig);
 
-// Initialize Cloud Storage and get a reference to the service
 const storage = getStorage();
 
-// Configure multer to use memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
-// POST route to handle file uploads
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -33,19 +29,16 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       `files/${req.file.originalname}_${dateTime}`
     );
 
-    // Create file metadata including the content type
     const metadata = {
       contentType: req.file.mimetype,
     };
 
-    // Upload the file to Firebase Storage
     const snapshot = await uploadBytesResumable(
       storageRef,
       req.file.buffer,
       metadata
     );
 
-    // Get the file's public URL
     const downloadURL = await getDownloadURL(snapshot.ref);
 
     console.log('File successfully uploaded.');
