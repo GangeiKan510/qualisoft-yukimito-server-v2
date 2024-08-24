@@ -7,6 +7,7 @@ export const getUserByEmail = async (email: string) => {
       where: {
         email: email,
       },
+      include: { pets: true },
     });
 
     if (!user) {
