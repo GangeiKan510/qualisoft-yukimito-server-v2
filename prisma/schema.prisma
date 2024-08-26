@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL")
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
 }
 
 model Yukimito {
@@ -59,6 +59,7 @@ model Booking {
   address        String
   phone_number   String
   email          String
+  total_bill     String
 
   check_in_date  String
   check_out_date String
