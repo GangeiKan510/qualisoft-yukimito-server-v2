@@ -59,7 +59,7 @@ model Booking {
   address        String
   phone_number   String
   email          String
-  total_bill     String
+  total_bill     Int
 
   check_in_date  String
   check_out_date String

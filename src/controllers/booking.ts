@@ -3,6 +3,66 @@ import prisma from './db';
 
 export const createBooking = async (body: BookingProps) => {
   try {
+    let totalBill = 0;
+
+    const checkInDate = new Date(body.check_in_date);
+    const checkOutDate = new Date(body.check_out_date);
+    const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+    const numberOfDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    body.pets.forEach((pet: PetProps) => {
+      switch (body.service) {
+        case 'Errand Care':
+          if (
+            pet.size === 'XSmall' ||
+            pet.size === 'Small' ||
+            pet.size === 'Medium'
+          ) {
+            totalBill += 175;
+          } else if (pet.size === 'Large' || pet.size === 'XLarge') {
+            totalBill += 200;
+          }
+          break;
+
+        case 'Day Care':
+          if (
+            pet.size === 'XSmall' ||
+            pet.size === 'Small' ||
+            pet.size === 'Medium'
+          ) {
+            totalBill += 250;
+          } else if (pet.size === 'Large' || pet.size === 'XLarge') {
+            totalBill += 275;
+          }
+          break;
+
+        case 'Home Care':
+          let homeCareRate = 0;
+          switch (pet.size) {
+            case 'XSmall':
+              homeCareRate = 425;
+              break;
+            case 'Small':
+              homeCareRate = 475;
+              break;
+            case 'Medium':
+              homeCareRate = 525;
+              break;
+            case 'Large':
+              homeCareRate = 575;
+              break;
+            case 'XLarge':
+              homeCareRate = 650;
+              break;
+          }
+          totalBill += homeCareRate * numberOfDays;
+          break;
+
+        default:
+          throw new Error('Invalid service type');
+      }
+    });
+
     const newBooking = await prisma.booking.create({
       data: {
         pet_owner_name: body.pet_owner_name,
@@ -32,6 +92,8 @@ export const createBooking = async (body: BookingProps) => {
           size: pet.size,
           vaccine_photo: pet.vaccine_photo,
         })),
+
+        total_bill: totalBill, // Now an integer
       },
     });
 

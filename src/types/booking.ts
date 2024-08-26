@@ -11,6 +11,6 @@ export interface BookingProps {
   check_out_date: string;
   user_id: string;
   raw_pet_data: PetProps[];
+  total_bill: number;
 }
 export { PetProps };
-

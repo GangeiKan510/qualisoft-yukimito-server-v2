@@ -50,7 +50,6 @@ export const BookingSchema = z.object({
     .string()
     .nonempty({ message: 'Check-out date is required' }),
   user_id: z.string().nonempty({ message: 'User ID is required' }),
-  closet_id: z.string().nonempty({ message: 'Closet ID is required' }),
   pets: z
     .array(PetSchema)
     .nonempty({ message: 'At least one pet is required' }),
