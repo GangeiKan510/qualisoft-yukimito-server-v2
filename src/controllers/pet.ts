@@ -1,5 +1,5 @@
-import prisma from './db'; // Ensure this path matches your setup
-import { PetProps } from '../types/pet'; // Assuming you have defined PetProps in your types
+import prisma from './db';
+import { PetProps } from '../types/pet';
 
 export const createPet = async (userId: string, petData: PetProps) => {
   try {
