@@ -35,3 +35,18 @@ export const getAllPetsByUserId = async (userId: string) => {
     throw new Error(`Failed to fetch pets: ${error.message || error}`);
   }
 };
+
+export const deletePetById = async (petId: string) => {
+  try {
+    const deletedPet = await prisma.pet.delete({
+      where: {
+        id: petId,
+      },
+    });
+
+    return deletedPet;
+  } catch (error: any) {
+    console.error('Error deleting pet:', error);
+    throw new Error(`Failed to delete pet: ${error.message || error}`);
+  }
+};
