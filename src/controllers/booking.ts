@@ -63,6 +63,31 @@ export const createBooking = async (body: BookingProps) => {
       }
     });
 
+    const existingPets = await prisma.pet.findMany({
+      where: {
+        OR: body.pets.map((pet: PetProps) => ({
+          name: pet.name,
+          breed: pet.breed,
+          birth_date: pet.birth_date,
+          size: pet.size,
+          userId: body.user_id,
+        })),
+      },
+    });
+
+    const petsToLink = existingPets.map((pet) => ({ id: pet.id }));
+    const petsToCreate = body.pets.filter(
+      (pet: PetProps) =>
+        !existingPets.some(
+          (existingPet) =>
+            existingPet.name === pet.name &&
+            existingPet.breed === pet.breed &&
+            existingPet.birth_date === pet.birth_date &&
+            existingPet.size === pet.size &&
+            existingPet.userId === body.user_id
+        )
+    );
+
     const newBooking = await prisma.booking.create({
       data: {
         pet_owner_name: body.pet_owner_name,
@@ -75,7 +100,8 @@ export const createBooking = async (body: BookingProps) => {
         user_id: body.user_id,
 
         pets: {
-          create: body.pets.map((pet: PetProps) => ({
+          connect: petsToLink,
+          create: petsToCreate.map((pet: PetProps) => ({
             name: pet.name,
             breed: pet.breed,
             birth_date: pet.birth_date,
@@ -93,7 +119,7 @@ export const createBooking = async (body: BookingProps) => {
           vaccine_photo: pet.vaccine_photo,
         })),
 
-        total_bill: totalBill, // Now an integer
+        total_bill: totalBill,
       },
     });
 
