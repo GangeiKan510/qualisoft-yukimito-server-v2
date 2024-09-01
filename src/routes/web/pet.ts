@@ -96,14 +96,14 @@ router.post('/my-pets', async (req, res) => {
 });
 
 router.delete('/delete-pet', async (req, res) => {
-  const { petId } = req.body;
+  const { petId } = req.query;
 
   if (!petId) {
     return res.status(400).json({ error: 'Pet ID is required' });
   }
 
   try {
-    const deletedPet = await deletePetById(petId);
+    const deletedPet = await deletePetById(petId as string);
     res.status(200).json(deletedPet);
   } catch (error: any) {
     console.error('Error deleting pet:', error);
