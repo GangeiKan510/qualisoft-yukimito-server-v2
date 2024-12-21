@@ -42,6 +42,7 @@ model Pet {
   birth_date    String
   size          String
   vaccine_photo String
+  is_vaccinated Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
