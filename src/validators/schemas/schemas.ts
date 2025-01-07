@@ -37,6 +37,14 @@ export const PetSchema = z.object({
     .url({ message: 'Vaccine photo must be a valid URL' }),
 });
 
+export const UpdatePetSchema = z.object({
+  name: z.string().optional(),
+  breed: z.string().optional(),
+  birth_date: z.string().optional(),
+  size: z.string().optional(),
+  vaccine_photo: z.string().optional(),
+});
+
 export const BookingSchema = z.object({
   pet_owner_name: z
     .string()

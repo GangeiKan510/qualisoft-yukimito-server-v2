@@ -215,3 +215,28 @@ export const getAvailability = async () => {
     throw new Error(`Failed to check availability: ${error.message || error}`);
   }
 };
+
+export const deleteBooking = async (bookingId: string) => {
+  try {
+    const deletedBooking = await prisma.booking.delete({
+      where: { id: bookingId },
+    });
+
+    return { success: true, message: 'Booking deleted successfully.' };
+  } catch (error: any) {
+    try {
+      const deletedInstantBooking = await prisma.instantBooking.delete({
+        where: { id: bookingId },
+      });
+
+      return {
+        success: true,
+        message: 'Instant booking deleted successfully.',
+      };
+    } catch (instantError: any) {
+      throw new Error(
+        `Failed to delete booking: ${error.message || instantError.message}`
+      );
+    }
+  }
+};

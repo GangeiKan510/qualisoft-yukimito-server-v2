@@ -36,6 +36,37 @@ export const getAllPetsByUserId = async (userId: string) => {
   }
 };
 
+export const updatePetById = async (
+  petId: string,
+  petData: Partial<PetProps>
+) => {
+  try {
+    const updateData: Partial<PetProps> = {
+      name: petData.name,
+      breed: petData.breed,
+      birth_date: petData.birth_date,
+      size: petData.size,
+      vaccine_photo: petData.vaccine_photo,
+    };
+
+    Object.keys(updateData).forEach(
+      (key) =>
+        updateData[key as keyof PetProps] === undefined &&
+        delete updateData[key as keyof PetProps]
+    );
+
+    const updatedPet = await prisma.pet.update({
+      where: { id: petId },
+      data: updateData,
+    });
+
+    return updatedPet;
+  } catch (error: any) {
+    console.error('Error updating pet:', error);
+    throw new Error(`Failed to update pet: ${error.message || error}`);
+  }
+};
+
 export const deletePetById = async (petId: string) => {
   try {
     const deletedPet = await prisma.pet.delete({

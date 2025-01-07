@@ -9,6 +9,7 @@ import {
   createInstantBooking,
   getAllBookings,
   getAvailability,
+  deleteBooking,
 } from '../../controllers/booking';
 
 const router = Router();
@@ -81,6 +82,18 @@ router.get('/availability', async (req: Request, res: Response) => {
     res.status(200).json({ available: isAvailable });
   } catch (error: any) {
     console.error('Error checking availability:', error.message || error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+router.delete('/delete-booking/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const result = await deleteBooking(id);
+    res.status(200).json(result);
+  } catch (error: any) {
+    console.error('Error deleting booking:', error.message || error);
     res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 });
