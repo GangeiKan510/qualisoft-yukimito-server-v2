@@ -86,11 +86,15 @@ router.get('/availability', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/delete-booking/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
+router.delete('/delete-booking', async (req: Request, res: Response) => {
+  const { bookingId } = req.query;
+
+  if (!bookingId) {
+    return res.status(400).json({ error: 'Booking ID is required' });
+  }
 
   try {
-    const result = await deleteBooking(id);
+    const result = await deleteBooking(bookingId as string);
     res.status(200).json(result);
   } catch (error: any) {
     console.error('Error deleting booking:', error.message || error);
