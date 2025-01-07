@@ -8,7 +8,7 @@ import {
   getAllPetsByUserId,
   updatePetById,
 } from '../../controllers/pet';
-import { PetSchema } from '../../validators/schemas/schemas';
+import { PetSchema, UpdatePetSchema } from '../../validators/schemas/schemas';
 import { validate } from '../../validators/validate';
 import { ZodError } from 'zod';
 
@@ -125,7 +125,7 @@ router.put('/update-pet', upload.single('vaccine_photo'), async (req, res) => {
       vaccine_photo: vaccinePhotoUrl,
     };
 
-    const validatedData = PetSchema.partial().parse(petData);
+    const validatedData = UpdatePetSchema.partial().parse(petData);
 
     const updatedPet = await updatePetById(petId, validatedData);
 
