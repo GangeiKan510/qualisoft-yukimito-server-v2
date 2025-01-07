@@ -84,7 +84,7 @@ router.post(
   }
 );
 
-router.put('/update-pet', upload.single('vaccine_photo'), async (req, res) => {
+router.post('/update-pet', upload.single('vaccine_photo'), async (req, res) => {
   const { petId, name, breed, birth_date, size } = req.body;
   const vaccinePhoto = req.file;
 
