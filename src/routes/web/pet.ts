@@ -6,6 +6,7 @@ import {
   createPet,
   deletePetById,
   getAllPetsByUserId,
+  updatePetById,
 } from '../../controllers/pet';
 import { PetSchema } from '../../validators/schemas/schemas';
 import { validate } from '../../validators/validate';
@@ -82,6 +83,62 @@ router.post(
     }
   }
 );
+
+router.put('/update-pet', upload.single('vaccine_photo'), async (req, res) => {
+  const { petId, name, breed, birth_date, size } = req.body;
+  const vaccinePhoto = req.file;
+
+  if (!petId) {
+    return res.status(400).json({ error: 'Pet ID is required' });
+  }
+
+  try {
+    let vaccinePhotoUrl = undefined;
+
+    if (vaccinePhoto) {
+      const formData = new FormData();
+      formData.append('file', vaccinePhoto.buffer, {
+        filename: vaccinePhoto.originalname,
+        contentType: vaccinePhoto.mimetype,
+        knownLength: vaccinePhoto.size,
+      });
+      formData.append('folder', 'vaccines');
+
+      const response = await axios.post(
+        `${process.env.PUBLIC_API_SERVER}/web/images/upload`,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+          },
+        }
+      );
+
+      vaccinePhotoUrl = response.data.downloadURL;
+    }
+
+    const petData = {
+      name,
+      breed,
+      birth_date,
+      size,
+      vaccine_photo: vaccinePhotoUrl,
+    };
+
+    const validatedData = PetSchema.partial().parse(petData);
+
+    const updatedPet = await updatePetById(petId, validatedData);
+
+    res.status(200).json(updatedPet);
+  } catch (error: any) {
+    if (error instanceof ZodError) {
+      console.error('Validation error:', error.errors);
+      return res.status(400).json({ errors: error.errors });
+    }
+    console.error('Error updating pet:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
 
 router.post('/my-pets', async (req, res) => {
   const { userId } = req.body;
