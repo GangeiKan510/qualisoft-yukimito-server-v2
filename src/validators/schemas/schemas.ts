@@ -78,3 +78,7 @@ export const InstantBookingSchema = z.object({
     .nonempty({ message: 'Check-out date is required' }),
   raw_pet_data: z.array(PetSchema).optional(),
 });
+
+export const BookingIdSchema = z.object({
+  bookingId: z.string().uuid({ message: 'Booking ID must be a valid UUID' }),
+});
