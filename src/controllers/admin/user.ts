@@ -1,9 +1,9 @@
 import prisma from '../db';
 
-export const modifyUserRole = async (userId: string, newRole: number) => {
+export const modifyUserRole = async (email: string, newRole: number) => {
   try {
     const updatedUser = await prisma.user.update({
-      where: { id: userId },
+      where: { email },
       data: { role: newRole },
     });
 

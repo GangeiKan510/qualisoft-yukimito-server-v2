@@ -19,16 +19,15 @@ router.get('/non-default-role-users', async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 });
-
 router.post('/modify-user-role', async (req: Request, res: Response) => {
-  const { userId, newRole } = req.body;
+  const { email, newRole } = req.body;
 
-  if (!userId || newRole === undefined) {
-    return res.status(400).json({ error: 'User ID and new role are required' });
+  if (!email || newRole === undefined) {
+    return res.status(400).json({ error: 'Email and new role are required' });
   }
 
   try {
-    const updatedUser = await modifyUserRole(userId, newRole);
+    const updatedUser = await modifyUserRole(email, newRole);
 
     if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
