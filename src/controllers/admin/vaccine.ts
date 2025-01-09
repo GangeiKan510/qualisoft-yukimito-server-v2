@@ -7,9 +7,9 @@ export const createVaccine = async (vaccineData: Vaccine) => {
       data: {
         name: vaccineData.name,
         manufacturer: vaccineData.manufacturer,
-        batchNumber: vaccineData.batch_number,
-        expiryDate: vaccineData.expiry_date,
-        dateAdministered: vaccineData.date_administered,
+        batch_number: vaccineData.batch_number,
+        expiry_date: vaccineData.expiry_date,
+        date_administered: vaccineData.date_administered,
       },
     });
 
