@@ -4,6 +4,7 @@ import bookingRouter from './booking';
 import petRouter from './pet';
 import vaccineRouter from './vaccine';
 import productRouter from './product';
+import userRouter from './user';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use('/booking', bookingRouter);
 app.use('/pet', petRouter);
 app.use('/vaccine', vaccineRouter);
 app.use('/product', productRouter);
+app.use('/user', userRouter);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Admin Routes');
