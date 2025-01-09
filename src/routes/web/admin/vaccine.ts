@@ -58,15 +58,15 @@ router.post('/update-vaccine', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/delete-vaccine/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
+router.delete('/delete-vaccine', async (req: Request, res: Response) => {
+  const { id } = req.query;
 
   if (!id) {
     return res.status(400).json({ error: 'Vaccine ID is required' });
   }
 
   try {
-    const deletedVaccine = await deleteVaccineById(id);
+    const deletedVaccine = await deleteVaccineById(id as string);
 
     if (!deletedVaccine) {
       return res
