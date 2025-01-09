@@ -98,3 +98,16 @@ model InstantBooking {
 
   raw_pet_data Json[]
 }
+
+model Vaccine {
+  id                String   @id @unique @default(uuid())
+  serial            Int      @unique @default(autoincrement())
+  name              String
+  manufacturer      String
+  batch_number      String
+  expiry_date       DateTime
+  date_administered DateTime
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
