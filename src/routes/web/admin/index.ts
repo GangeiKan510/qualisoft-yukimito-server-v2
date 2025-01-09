@@ -3,6 +3,7 @@ import express, { Request, Response, Router } from 'express';
 import bookingRouter from './booking';
 import petRouter from './pet';
 import vaccineRouter from './vaccine';
+import productRouter from './product';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use('/booking', bookingRouter);
 app.use('/pet', petRouter);
 app.use('/vaccine', vaccineRouter);
+app.use('/product', productRouter);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Admin Routes');
