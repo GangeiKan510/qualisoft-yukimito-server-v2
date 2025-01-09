@@ -35,26 +35,29 @@ export const deleteUser = async (userId: string) => {
   }
 };
 
-export const createAdminAccount = async (
-  email: string,
-  name: string,
-  phone: string,
-  address: string
-) => {
+export const getUsersWithNonDefaultRole = async () => {
   try {
-    const newAdmin = await prisma.user.create({
-      data: {
-        email,
-        name,
-        phone,
-        address,
-        role: 2,
+    const users = await prisma.user.findMany({
+      where: {
+        role: {
+          not: 1,
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        address: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
-    return newAdmin;
+    return users;
   } catch (error) {
-    console.error('Error creating admin account:', error);
-    throw new Error('Failed to create admin account');
+    console.error('Error fetching users with non-default role:', error);
+    throw new Error('Failed to fetch users');
   }
 };
