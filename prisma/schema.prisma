@@ -100,14 +100,14 @@ model InstantBooking {
 }
 
 model Vaccine {
-  id               String   @id @unique @default(uuid())
-  serial           Int      @unique @default(autoincrement())
-  name             String
-  manufacturer     String
-  batchNumber      String
-  expiryDate       DateTime
-  dateAdministered DateTime
+  id                String   @id @unique @default(uuid())
+  serial            Int      @unique @default(autoincrement())
+  name              String
+  manufacturer      String
+  batch_number      String
+  expiry_date       DateTime
+  date_administered DateTime
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
