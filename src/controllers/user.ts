@@ -1,6 +1,6 @@
 import { UserProps } from '../types/user';
 import prisma from './db';
-import admin from 'firebase-admin';
+import admin from './firebase-admin';
 
 export const getUserByEmail = async (email: string) => {
   try {
