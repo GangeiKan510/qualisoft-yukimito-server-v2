@@ -1,5 +1,10 @@
 import { Request, Response, Router } from 'express';
-import { createUser, getUserByEmail, updateUser } from '../../controllers/user';
+import {
+  createUser,
+  getUserByEmail,
+  updateUser,
+  deleteUser,
+} from '../../controllers/user';
 import { UpdateUserSchema, UserSchema } from '../../validators/schemas/schemas';
 import { validate } from '../../validators/validate';
 
@@ -62,6 +67,22 @@ router.post(
     }
   }
 );
+
+router.delete('/delete-user', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    await deleteUser(userId);
+    res.status(200).json({ message: 'User deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting user:', error.message || error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
 
 router.get('/', (req: Request, res: Response) => {
   res.send('Web file router');
