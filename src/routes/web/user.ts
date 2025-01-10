@@ -68,18 +68,18 @@ router.post(
   }
 );
 
-router.delete('/delete-user', async (req: Request, res: Response) => {
+router.delete('/delete-user', async (req, res) => {
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
   try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
-
-    await deleteUser(userId);
+    await deleteUser(userId as string);
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error: any) {
-    console.error('Error deleting user:', error.message || error);
+    console.error('Error deleting user:', error);
     res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 });
