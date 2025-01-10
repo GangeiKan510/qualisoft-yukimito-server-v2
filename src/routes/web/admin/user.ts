@@ -3,6 +3,7 @@ import {
   getUsersWithNonDefaultRole,
   modifyUserRole,
   deleteUser,
+  getAllUsersWithDetails,
 } from '../../../controllers/admin/user';
 
 const router = Router();
@@ -59,6 +60,19 @@ router.delete('/delete-user', async (req: Request, res: Response) => {
     res.status(200).json(deletedUser);
   } catch (error: any) {
     console.error('Error deleting user:', error.message || error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+router.get('/get-all-users', async (req: Request, res: Response) => {
+  try {
+    const users = await getAllUsersWithDetails();
+    res.status(200).json(users);
+  } catch (error: any) {
+    console.error(
+      'Error fetching all users with details:',
+      error.message || error
+    );
     res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 });

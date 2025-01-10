@@ -61,3 +61,19 @@ export const getUsersWithNonDefaultRole = async () => {
     throw new Error('Failed to fetch users');
   }
 };
+
+export const getAllUsersWithDetails = async () => {
+  try {
+    const users = await prisma.user.findMany({
+      include: {
+        bookings: true,
+        pets: true,
+      },
+    });
+
+    return users;
+  } catch (error) {
+    console.error('Error fetching users with details:', error);
+    throw new Error('Failed to fetch users with details');
+  }
+};
