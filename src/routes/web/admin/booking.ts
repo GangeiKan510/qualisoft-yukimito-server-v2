@@ -52,24 +52,19 @@ router.post(
   }
 );
 
-router.delete(
-  '/delete-booking',
-  validate(BookingIdSchema),
-  async (req: Request, res: Response) => {
-    const { bookingId } = req.body;
+router.delete('/delete-booking', async (req: Request, res: Response) => {
+  const { bookingId } = req.query;
 
-    if (!bookingId) {
-      return res.status(400).json({ error: 'Booking ID is required' });
-    }
-
-    try {
-      const result = await deleteBooking(bookingId);
-      res.status(200).json(result);
-    } catch (error: any) {
-      console.error('Error deleting booking:', error.message || error);
-      res.status(500).json({ error: error.message || 'Internal Server Error' });
-    }
+  if (!bookingId) {
+    return res.status(400).json({ error: 'Booking ID is required' });
   }
-);
 
+  try {
+    const result = await deleteBooking(bookingId as string);
+    res.status(200).json(result);
+  } catch (error: any) {
+    console.error('Error deleting booking:', error.message || error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
 export default router;
