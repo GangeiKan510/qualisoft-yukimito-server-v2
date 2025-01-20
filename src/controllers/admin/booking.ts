@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../db';
 
 export const getBookings = async () => {
@@ -78,6 +79,7 @@ export const rejectBooking = async (bookingId: string) => {
     throw new Error('Failed to reject booking');
   }
 };
+
 export const updateBookingDates = async (
   bookingId: string,
   { checkInDate, checkOutDate }: { checkInDate?: string; checkOutDate?: string }
@@ -124,8 +126,13 @@ export const updateBookingDates = async (
     ) => {
       const checkIn = new Date(checkInDate);
       const checkOut = new Date(checkOutDate);
-      const numberOfDays = Math.ceil(
-        Math.abs(checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+
+      const numberOfDays = Math.max(
+        1,
+        Math.ceil(
+          Math.abs(checkOut.getTime() - checkIn.getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
       );
 
       let totalBill = 0;
@@ -136,6 +143,40 @@ export const updateBookingDates = async (
       return totalBill;
     };
 
+    const validatePetsArray = (
+      pets: Prisma.JsonValue[]
+    ): { size: string }[] => {
+      if (!Array.isArray(pets)) return [];
+      return pets.filter(
+        (pet): pet is { size: string } =>
+          typeof pet === 'object' &&
+          pet !== null &&
+          'size' in pet &&
+          typeof pet.size === 'string'
+      );
+    };
+
+    const handleCheckOutDateCalculation = (
+      service: string,
+      checkInDate?: string
+    ): string | undefined => {
+      if (!checkInDate) return undefined;
+
+      const checkInDateTime = new Date(checkInDate);
+
+      if (service === 'Errand Care') {
+        return new Date(
+          checkInDateTime.getTime() + 4 * 60 * 60 * 1000
+        ).toISOString();
+      } else if (service === 'Day Care') {
+        return new Date(
+          checkInDateTime.getTime() + 10 * 60 * 60 * 1000
+        ).toISOString();
+      }
+
+      return undefined;
+    };
+
     if (bookingType === 'regular') {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
@@ -143,33 +184,16 @@ export const updateBookingDates = async (
       });
       if (!booking) throw new Error('Booking not found');
 
-      let calculatedCheckOutDate = checkOutDate;
-
-      if (checkInDate && booking.service !== 'Home Care') {
-        const checkInDateTime = new Date(checkInDate);
-
-        if (booking.service === 'Errand Care') {
-          calculatedCheckOutDate = new Date(
-            checkInDateTime.getTime() + 4 * 60 * 60 * 1000
-          ).toISOString();
-        } else if (booking.service === 'Day Care') {
-          calculatedCheckOutDate = new Date(
-            checkInDateTime.getTime() + 10 * 60 * 60 * 1000
-          ).toISOString();
-        }
-      }
-
-      if (checkOutDate && booking.service !== 'Home Care') {
-        throw new Error(
-          'Check-out date changes are only allowed manually for home care service'
-        );
-      }
+      const calculatedCheckOutDate =
+        handleCheckOutDateCalculation(booking.service, checkInDate) ||
+        checkOutDate ||
+        booking.check_out_date;
 
       const totalBill = calculateTotalBill(
         booking.pets,
         booking.service,
         checkInDate || booking.check_in_date,
-        calculatedCheckOutDate || booking.check_out_date
+        calculatedCheckOutDate
       );
 
       return await prisma.booking.update({
@@ -196,34 +220,19 @@ export const updateBookingDates = async (
       });
       if (!booking) throw new Error('Booking not found');
 
-      let calculatedCheckOutDate = checkOutDate;
+      const calculatedCheckOutDate =
+        handleCheckOutDateCalculation(booking.service, checkInDate) ||
+        checkOutDate ||
+        booking.check_out_date;
 
-      if (checkInDate && booking.service !== 'Home Care') {
-        const checkInDateTime = new Date(checkInDate);
-
-        if (booking.service === 'Errand Care') {
-          calculatedCheckOutDate = new Date(
-            checkInDateTime.getTime() + 4 * 60 * 60 * 1000
-          ).toISOString();
-        } else if (booking.service === 'Day Care') {
-          calculatedCheckOutDate = new Date(
-            checkInDateTime.getTime() + 10 * 60 * 60 * 1000
-          ).toISOString();
-        }
-      }
-
-      if (checkOutDate && booking.service !== 'Home Care') {
-        throw new Error(
-          'Check-out date changes are only allowed manually for home care service'
-        );
-      }
-
-      const pets = booking.raw_pet_data as { size: string }[];
+      const pets = validatePetsArray(
+        booking.raw_pet_data as Prisma.JsonValue[]
+      );
       const totalBill = calculateTotalBill(
         pets,
         booking.service,
         checkInDate || booking.check_in_date,
-        calculatedCheckOutDate || booking.check_out_date
+        calculatedCheckOutDate
       );
 
       return await prisma.instantBooking.update({
