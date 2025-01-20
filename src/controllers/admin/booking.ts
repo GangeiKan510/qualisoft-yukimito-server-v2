@@ -78,6 +78,95 @@ export const rejectBooking = async (bookingId: string) => {
     throw new Error('Failed to reject booking');
   }
 };
+export const updateBookingDates = async (
+  bookingId: string,
+  { checkInDate, checkOutDate }: { checkInDate?: string; checkOutDate?: string }
+) => {
+  try {
+    const bookingType = await getBookingType(bookingId);
+
+    if (bookingType === 'regular') {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+      });
+      if (!booking) throw new Error('Booking not found');
+
+      let calculatedCheckOutDate = checkOutDate;
+
+      if (checkInDate && booking.service !== 'Home Care') {
+        const checkInDateTime = new Date(checkInDate);
+
+        if (booking.service === 'Errand Care') {
+          calculatedCheckOutDate = new Date(
+            checkInDateTime.getTime() + 4 * 60 * 60 * 1000
+          ).toISOString();
+        } else if (booking.service === 'Day Care') {
+          calculatedCheckOutDate = new Date(
+            checkInDateTime.getTime() + 10 * 60 * 60 * 1000
+          ).toISOString();
+        }
+      }
+
+      if (checkOutDate && booking.service !== 'Home Care') {
+        throw new Error(
+          'Check-out date changes are only allowed manually for home care service'
+        );
+      }
+
+      return await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          ...(checkInDate && { check_in_date: checkInDate }),
+          ...(calculatedCheckOutDate && {
+            check_out_date: calculatedCheckOutDate,
+          }),
+        },
+      });
+    }
+
+    if (bookingType === 'instant') {
+      const booking = await prisma.instantBooking.findUnique({
+        where: { id: bookingId },
+      });
+      if (!booking) throw new Error('Booking not found');
+
+      let calculatedCheckOutDate = checkOutDate;
+
+      if (checkInDate && booking.service !== 'Home Care') {
+        const checkInDateTime = new Date(checkInDate);
+
+        if (booking.service === 'Errand Care') {
+          calculatedCheckOutDate = new Date(
+            checkInDateTime.getTime() + 4 * 60 * 60 * 1000
+          ).toISOString();
+        } else if (booking.service === 'Dayy Care') {
+          calculatedCheckOutDate = new Date(
+            checkInDateTime.getTime() + 10 * 60 * 60 * 1000
+          ).toISOString();
+        }
+      }
+
+      if (checkOutDate && booking.service !== 'Home Care') {
+        throw new Error(
+          'Check-out date changes are only allowed manually for home care service'
+        );
+      }
+
+      return await prisma.instantBooking.update({
+        where: { id: bookingId },
+        data: {
+          ...(checkInDate && { check_in_date: checkInDate }),
+          ...(calculatedCheckOutDate && {
+            check_out_date: calculatedCheckOutDate,
+          }),
+        },
+      });
+    }
+  } catch (error) {
+    console.error('Error updating booking dates:', error);
+    throw new Error('Failed to update booking dates');
+  }
+};
 
 export const deleteBooking = async (bookingId: string) => {
   try {

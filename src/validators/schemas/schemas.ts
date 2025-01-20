@@ -82,3 +82,9 @@ export const InstantBookingSchema = z.object({
 export const BookingIdSchema = z.object({
   bookingId: z.string().uuid({ message: 'Booking ID must be a valid UUID' }),
 });
+
+export const UpdateBookingDatesSchema = z.object({
+  bookingId: z.string().uuid(),
+  checkInDate: z.string().optional(),
+  checkOutDate: z.string().optional(),
+});

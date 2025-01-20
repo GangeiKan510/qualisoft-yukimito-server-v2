@@ -5,8 +5,12 @@ import {
   acceptBooking,
   rejectBooking,
   deleteBooking,
+  updateBookingDates,
 } from '../../../controllers/admin/booking';
-import { BookingIdSchema } from '../../../validators/schemas/schemas';
+import {
+  BookingIdSchema,
+  UpdateBookingDatesSchema,
+} from '../../../validators/schemas/schemas';
 
 const router = Router();
 
@@ -47,6 +51,25 @@ router.post(
       res.status(200).json(result);
     } catch (error: any) {
       console.error('Error rejecting booking:', error.message || error);
+      res.status(500).json({ error: error.message || 'Internal Server Error' });
+    }
+  }
+);
+
+router.post(
+  '/update-booking-dates',
+  validate(UpdateBookingDatesSchema),
+  async (req: Request, res: Response) => {
+    const { bookingId, checkInDate, checkOutDate } = req.body;
+
+    try {
+      const result = await updateBookingDates(bookingId, {
+        checkInDate,
+        checkOutDate,
+      });
+      res.status(200).json(result);
+    } catch (error: any) {
+      console.error('Error updating booking dates:', error.message || error);
       res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
   }
