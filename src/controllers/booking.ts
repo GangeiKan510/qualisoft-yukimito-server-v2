@@ -131,6 +131,33 @@ export const createBooking = async (body: BookingProps) => {
 
 export const createInstantBooking = async (body: BookingProps) => {
   try {
+    const totalBill = body.raw_pet_data.reduce((total, pet) => {
+      let petPrice = 0;
+
+      switch (body.service) {
+        case 'Errand Care':
+          petPrice = pet.size === 'Large' || pet.size === 'XLarge' ? 200 : 175;
+          break;
+        case 'Day Care':
+          petPrice = pet.size === 'Large' || pet.size === 'XLarge' ? 275 : 250;
+          break;
+        case 'Home Care':
+          const homeCareRates: Record<string, number> = {
+            XSmall: 425,
+            Small: 475,
+            Medium: 525,
+            Large: 575,
+            XLarge: 650,
+          };
+          petPrice = homeCareRates[pet.size];
+          break;
+        default:
+          break;
+      }
+
+      return total + petPrice;
+    }, 0);
+
     const newInstantBooking = await prisma.instantBooking.create({
       data: {
         pet_owner_name: body.pet_owner_name,
@@ -140,7 +167,6 @@ export const createInstantBooking = async (body: BookingProps) => {
         email: body.email,
         check_in_date: body.check_in_date,
         check_out_date: body.check_out_date,
-
         raw_pet_data: body.raw_pet_data.map((pet: PetProps) => ({
           name: pet.name,
           breed: pet.breed,
@@ -148,6 +174,7 @@ export const createInstantBooking = async (body: BookingProps) => {
           size: pet.size,
           vaccine_photo: pet.vaccine_photo,
         })),
+        total_bill: totalBill,
       },
     });
 
