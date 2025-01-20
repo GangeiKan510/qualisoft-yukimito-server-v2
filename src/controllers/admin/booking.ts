@@ -85,9 +85,61 @@ export const updateBookingDates = async (
   try {
     const bookingType = await getBookingType(bookingId);
 
+    const calculatePetPrice = (
+      pet: { size: string },
+      service: string,
+      numberOfDays: number
+    ) => {
+      let petPrice = 0;
+
+      switch (service) {
+        case 'Errand Care':
+          petPrice = pet.size === 'Large' || pet.size === 'XLarge' ? 200 : 175;
+          break;
+        case 'Day Care':
+          petPrice = pet.size === 'Large' || pet.size === 'XLarge' ? 275 : 250;
+          break;
+        case 'Home Care':
+          const homeCareRates: Record<string, number> = {
+            XSmall: 425,
+            Small: 475,
+            Medium: 525,
+            Large: 575,
+            XLarge: 650,
+          };
+          petPrice = homeCareRates[pet.size] * numberOfDays;
+          break;
+        default:
+          break;
+      }
+
+      return petPrice;
+    };
+
+    const calculateTotalBill = (
+      pets: { size: string }[],
+      service: string,
+      checkInDate: string,
+      checkOutDate: string
+    ) => {
+      const checkIn = new Date(checkInDate);
+      const checkOut = new Date(checkOutDate);
+      const numberOfDays = Math.ceil(
+        Math.abs(checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      let totalBill = 0;
+      pets.forEach((pet) => {
+        totalBill += calculatePetPrice(pet, service, numberOfDays);
+      });
+
+      return totalBill;
+    };
+
     if (bookingType === 'regular') {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
+        include: { pets: true },
       });
       if (!booking) throw new Error('Booking not found');
 
@@ -113,6 +165,13 @@ export const updateBookingDates = async (
         );
       }
 
+      const totalBill = calculateTotalBill(
+        booking.pets,
+        booking.service,
+        checkInDate || booking.check_in_date,
+        calculatedCheckOutDate || booking.check_out_date
+      );
+
       return await prisma.booking.update({
         where: { id: bookingId },
         data: {
@@ -120,6 +179,7 @@ export const updateBookingDates = async (
           ...(calculatedCheckOutDate && {
             check_out_date: calculatedCheckOutDate,
           }),
+          total_bill: totalBill,
         },
       });
     }
@@ -127,6 +187,12 @@ export const updateBookingDates = async (
     if (bookingType === 'instant') {
       const booking = await prisma.instantBooking.findUnique({
         where: { id: bookingId },
+        select: {
+          raw_pet_data: true,
+          service: true,
+          check_in_date: true,
+          check_out_date: true,
+        },
       });
       if (!booking) throw new Error('Booking not found');
 
@@ -139,7 +205,7 @@ export const updateBookingDates = async (
           calculatedCheckOutDate = new Date(
             checkInDateTime.getTime() + 4 * 60 * 60 * 1000
           ).toISOString();
-        } else if (booking.service === 'Dayy Care') {
+        } else if (booking.service === 'Day Care') {
           calculatedCheckOutDate = new Date(
             checkInDateTime.getTime() + 10 * 60 * 60 * 1000
           ).toISOString();
@@ -152,6 +218,14 @@ export const updateBookingDates = async (
         );
       }
 
+      const pets = booking.raw_pet_data as { size: string }[];
+      const totalBill = calculateTotalBill(
+        pets,
+        booking.service,
+        checkInDate || booking.check_in_date,
+        calculatedCheckOutDate || booking.check_out_date
+      );
+
       return await prisma.instantBooking.update({
         where: { id: bookingId },
         data: {
@@ -159,12 +233,13 @@ export const updateBookingDates = async (
           ...(calculatedCheckOutDate && {
             check_out_date: calculatedCheckOutDate,
           }),
+          total_bill: totalBill,
         },
       });
     }
   } catch (error) {
-    console.error('Error updating booking dates:', error);
-    throw new Error('Failed to update booking dates');
+    console.error('Error updating booking dates and prices:', error);
+    throw new Error('Failed to update booking dates and prices');
   }
 };
 

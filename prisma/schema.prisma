@@ -90,6 +90,7 @@ model InstantBooking {
 
   check_in_date  String
   check_out_date String
+  total_bill     Int
 
   status String @default("pending")
 
