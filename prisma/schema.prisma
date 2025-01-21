@@ -65,8 +65,9 @@ model Booking {
   email          String
   total_bill     Int
 
-  check_in_date  String
-  check_out_date String
+  check_in_date   String
+  check_out_date  String
+  pets_checked_in Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
