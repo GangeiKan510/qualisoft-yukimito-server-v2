@@ -6,6 +6,7 @@ import {
   rejectBooking,
   deleteBooking,
   updateBookingDates,
+  checkInPets,
 } from '../../../controllers/admin/booking';
 import {
   BookingIdSchema,
@@ -70,6 +71,25 @@ router.post(
       res.status(200).json(result);
     } catch (error: any) {
       console.error('Error updating booking dates:', error.message || error);
+      res.status(500).json({ error: error.message || 'Internal Server Error' });
+    }
+  }
+);
+
+router.post(
+  '/check-in-pets',
+  validate(BookingIdSchema),
+  async (req: Request, res: Response) => {
+    const { bookingId } = req.body;
+
+    try {
+      const result = await checkInPets(bookingId);
+      res.status(200).json({
+        message: 'Pets successfully checked in.',
+        updatedBooking: result,
+      });
+    } catch (error: any) {
+      console.error('Error checking in pets:', error.message || error);
       res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
   }
