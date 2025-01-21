@@ -278,6 +278,77 @@ export const checkInPets = async (bookingId: string) => {
   }
 };
 
+export const addAdditionalService = async (
+  bookingId: string,
+  title: string,
+  amount: number
+) => {
+  try {
+    await prisma.additionalService.create({
+      data: {
+        title,
+        amount,
+        bookingId,
+      },
+    });
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+
+    const updatedTotalBill = booking.total_bill + amount;
+
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: { total_bill: updatedTotalBill },
+    });
+
+    return {
+      message: 'Additional service added successfully',
+      totalBill: updatedTotalBill,
+    };
+  } catch (error) {
+    console.error('Error adding additional service:', error);
+    throw new Error('Failed to add additional service');
+  }
+};
+
+export const removeAdditionalService = async (serviceId: string) => {
+  try {
+    const service = await prisma.additionalService.findUnique({
+      where: { id: serviceId },
+      include: { booking: true },
+    });
+
+    if (!service) {
+      throw new Error('Additional service not found');
+    }
+
+    const updatedTotalBill = service.booking.total_bill - service.amount;
+
+    await prisma.booking.update({
+      where: { id: service.bookingId },
+      data: { total_bill: updatedTotalBill },
+    });
+
+    await prisma.additionalService.delete({
+      where: { id: serviceId },
+    });
+
+    return {
+      message: 'Additional service removed successfully',
+      totalBill: updatedTotalBill,
+    };
+  } catch (error) {
+    console.error('Error removing additional service:', error);
+    throw new Error('Failed to remove additional service');
+  }
+};
+
 export const deleteBooking = async (bookingId: string) => {
   try {
     const bookingType = await getBookingType(bookingId);
