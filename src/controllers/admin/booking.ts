@@ -239,6 +239,44 @@ export const updateBookingDates = async (
     throw new Error('Failed to update booking dates and prices');
   }
 };
+export const checkInPets = async (bookingId: string) => {
+  try {
+    const bookingType = await getBookingType(bookingId);
+
+    if (bookingType === 'regular') {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+      });
+      if (!booking) throw new Error('Booking not found');
+
+      return await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          pets_checked_in: true,
+        },
+      });
+    }
+
+    if (bookingType === 'instant') {
+      const booking = await prisma.instantBooking.findUnique({
+        where: { id: bookingId },
+      });
+      if (!booking) throw new Error('Booking not found');
+
+      return await prisma.instantBooking.update({
+        where: { id: bookingId },
+        data: {
+          pets_checked_in: true,
+        },
+      });
+    }
+
+    throw new Error('Booking type not supported');
+  } catch (error) {
+    console.error('Error checking in pets:', error);
+    throw new Error('Failed to check in pets');
+  }
+};
 
 export const deleteBooking = async (bookingId: string) => {
   try {

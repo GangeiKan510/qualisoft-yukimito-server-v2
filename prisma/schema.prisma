@@ -89,9 +89,10 @@ model InstantBooking {
   phone_number   String
   email          String
 
-  check_in_date  String
-  check_out_date String
-  total_bill     Int
+  check_in_date   String
+  check_out_date  String
+  total_bill      Int
+  pets_checked_in Boolean @default(false)
 
   status String @default("pending")
 
