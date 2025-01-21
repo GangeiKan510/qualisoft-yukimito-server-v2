@@ -88,3 +88,14 @@ export const UpdateBookingDatesSchema = z.object({
   checkInDate: z.string().optional(),
   checkOutDate: z.string().optional(),
 });
+
+export const AdditionalServiceSchema = z.object({
+  bookingId: z.string().uuid(),
+  title: z.string().min(1),
+  amount: z.number().min(1),
+});
+
+export const RemoveAdditionalServiceSchema = z.object({
+  bookingId: z.string().uuid(),
+  serviceId: z.string().uuid(),
+});

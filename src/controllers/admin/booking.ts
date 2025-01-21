@@ -317,21 +317,26 @@ export const addAdditionalService = async (
   }
 };
 
-export const removeAdditionalService = async (serviceId: string) => {
+export const removeAdditionalService = async (
+  bookingId: string,
+  serviceId: string
+) => {
   try {
     const service = await prisma.additionalService.findUnique({
       where: { id: serviceId },
       include: { booking: true },
     });
 
-    if (!service) {
-      throw new Error('Additional service not found');
+    if (!service || service.bookingId !== bookingId) {
+      throw new Error(
+        'Additional service not found or does not belong to the specified booking'
+      );
     }
 
     const updatedTotalBill = service.booking.total_bill - service.amount;
 
     await prisma.booking.update({
-      where: { id: service.bookingId },
+      where: { id: bookingId },
       data: { total_bill: updatedTotalBill },
     });
 

@@ -7,9 +7,13 @@ import {
   deleteBooking,
   updateBookingDates,
   checkInPets,
+  addAdditionalService,
+  removeAdditionalService,
 } from '../../../controllers/admin/booking';
 import {
+  AdditionalServiceSchema,
   BookingIdSchema,
+  RemoveAdditionalServiceSchema,
   UpdateBookingDatesSchema,
 } from '../../../validators/schemas/schemas';
 
@@ -90,6 +94,54 @@ router.post(
       });
     } catch (error: any) {
       console.error('Error checking in pets:', error.message || error);
+      res.status(500).json({ error: error.message || 'Internal Server Error' });
+    }
+  }
+);
+
+router.post(
+  '/add-additional-service',
+  validate(AdditionalServiceSchema),
+  async (req: Request, res: Response) => {
+    const { bookingId, title, amount } = req.body;
+
+    try {
+      const updatedBooking = await addAdditionalService(
+        bookingId,
+        title,
+        amount
+      );
+      res.status(200).json({
+        message: 'Additional service added successfully.',
+        updatedBooking,
+      });
+    } catch (error: any) {
+      console.error('Error adding additional service:', error.message || error);
+      res.status(500).json({ error: error.message || 'Internal Server Error' });
+    }
+  }
+);
+
+router.post(
+  '/remove-additional-service',
+  validate(RemoveAdditionalServiceSchema),
+  async (req: Request, res: Response) => {
+    const { bookingId, serviceId } = req.body;
+
+    try {
+      const updatedBooking = await removeAdditionalService(
+        bookingId,
+        serviceId
+      );
+      res.status(200).json({
+        message: 'Additional service removed successfully.',
+        updatedBooking,
+      });
+    } catch (error: any) {
+      console.error(
+        'Error removing additional service:',
+        error.message || error
+      );
       res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
   }
