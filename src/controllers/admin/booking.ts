@@ -87,43 +87,19 @@ export const updateBookingDates = async (
   try {
     const bookingType = await getBookingType(bookingId);
 
-    const calculatePetPrice = (
-      pet: { size: string },
-      service: string,
-      numberOfDays: number
-    ) => {
-      let petPrice = 0;
-
-      switch (service) {
-        case 'Errand Care':
-          petPrice = pet.size === 'Large' || pet.size === 'XLarge' ? 200 : 175;
-          break;
-        case 'Day Care':
-          petPrice = pet.size === 'Large' || pet.size === 'XLarge' ? 275 : 250;
-          break;
-        case 'Home Care':
-          const homeCareRates: Record<string, number> = {
-            XSmall: 425,
-            Small: 475,
-            Medium: 525,
-            Large: 575,
-            XLarge: 650,
-          };
-          petPrice = homeCareRates[pet.size] * numberOfDays;
-          break;
-        default:
-          break;
-      }
-
-      return petPrice;
-    };
-
-    const calculateTotalBill = (
+    const calculateTotalBillForHomeCare = (
       pets: { size: string }[],
-      service: string,
       checkInDate: string,
       checkOutDate: string
     ) => {
+      const homeCareRates: Record<string, number> = {
+        XSmall: 425,
+        Small: 475,
+        Medium: 525,
+        Large: 575,
+        XLarge: 650,
+      };
+
       const checkIn = new Date(checkInDate);
       const checkOut = new Date(checkOutDate);
 
@@ -137,7 +113,8 @@ export const updateBookingDates = async (
 
       let totalBill = 0;
       pets.forEach((pet) => {
-        totalBill += calculatePetPrice(pet, service, numberOfDays);
+        const rate = homeCareRates[pet.size] || 0;
+        totalBill += rate * numberOfDays;
       });
 
       return totalBill;
@@ -147,13 +124,16 @@ export const updateBookingDates = async (
       pets: Prisma.JsonValue[]
     ): { size: string }[] => {
       if (!Array.isArray(pets)) return [];
-      return pets.filter(
-        (pet): pet is { size: string } =>
+
+      return pets.filter((pet): pet is { size: string } => {
+        return (
           typeof pet === 'object' &&
           pet !== null &&
+          !Array.isArray(pet) &&
           'size' in pet &&
-          typeof pet.size === 'string'
-      );
+          typeof (pet as { size: string }).size === 'string'
+        );
+      });
     };
 
     const handleCheckOutDateCalculation = (
@@ -189,12 +169,15 @@ export const updateBookingDates = async (
         checkOutDate ||
         booking.check_out_date;
 
-      const totalBill = calculateTotalBill(
-        booking.pets,
-        booking.service,
-        checkInDate || booking.check_in_date,
-        calculatedCheckOutDate
-      );
+      let totalBill = booking.total_bill;
+
+      if (booking.service === 'Home Care') {
+        totalBill = calculateTotalBillForHomeCare(
+          booking.pets,
+          checkInDate || booking.check_in_date,
+          calculatedCheckOutDate
+        );
+      }
 
       return await prisma.booking.update({
         where: { id: bookingId },
@@ -216,6 +199,7 @@ export const updateBookingDates = async (
           service: true,
           check_in_date: true,
           check_out_date: true,
+          total_bill: true,
         },
       });
       if (!booking) throw new Error('Booking not found');
@@ -228,12 +212,16 @@ export const updateBookingDates = async (
       const pets = validatePetsArray(
         booking.raw_pet_data as Prisma.JsonValue[]
       );
-      const totalBill = calculateTotalBill(
-        pets,
-        booking.service,
-        checkInDate || booking.check_in_date,
-        calculatedCheckOutDate
-      );
+
+      let totalBill = booking.total_bill;
+
+      if (booking.service === 'Home Care') {
+        totalBill = calculateTotalBillForHomeCare(
+          pets,
+          checkInDate || booking.check_in_date,
+          calculatedCheckOutDate
+        );
+      }
 
       return await prisma.instantBooking.update({
         where: { id: bookingId },
