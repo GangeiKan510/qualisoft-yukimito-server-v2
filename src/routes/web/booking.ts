@@ -104,34 +104,28 @@ router.delete('/delete-booking', async (req: Request, res: Response) => {
 });
 
 router.post('/update-booking-date', async (req, res) => {
-  const { bookingId, check_in_date, check_out_date } = req.body;
-
-  if (!bookingId || !check_in_date || !check_out_date) {
-    return res.status(400).json({
-      message: 'Missing required fields: bookingId, check_in_date, and check_out_date are required.',
-    });
-  }
+  const { bookingId, check_in_date, check_out_date, service } = req.body;
 
   try {
+    if (!bookingId || !service || !check_in_date) {
+      return res.status(400).json({ error: 'Missing required fields: bookingId, serviceType, check_in_date' });
+    }
+
+    if (!['Day Care', 'Errand Care', 'Home Care'].includes(service)) {
+      return res.status(400).json({ error: 'Invalid service type. Allowed values: day care, errand care, home care' });
+    }
+
     const updatedBooking = await updateBookingDate(bookingId, {
+      service,
       check_in_date,
       check_out_date,
     });
 
-    res.status(200).json({
-      message: 'Booking date updated successfully.',
-      data: updatedBooking,
-    });
+    return res.status(200).json(updatedBooking);
   } catch (error: any) {
-    res.status(500).json({
-      message: 'Failed to update booking date.',
-      error: error.message,
-    });
+    console.error('Error in /update-booking-date endpoint:', error);
+    return res.status(500).json({ error: error.message || 'An error occurred' });
   }
-});
-
-router.get('/', (req: Request, res: Response) => {
-  res.send('Web file router');
 });
 
 export default router;
