@@ -267,3 +267,41 @@ export const deleteBooking = async (bookingId: string) => {
     }
   }
 };
+
+export const updateBookingDate = async (
+  bookingId: string,
+  updateData: Partial<BookingProps>
+) => {
+  try {
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { status: true },
+    });
+
+    if (!existingBooking) {
+      throw new Error('Booking not found');
+    }
+
+    if (existingBooking.status === 'accepted' || existingBooking.status === 'rejected') {
+      throw new Error(`Cannot update booking. Current status: ${existingBooking.status}`);
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        check_in_date: updateData.check_in_date,
+        check_out_date: updateData.check_out_date,
+        updatedAt: new Date(),
+      },
+    });
+
+    return updatedBooking;
+  } catch (error: any) {
+    console.error('Error updating booking:', error);
+    throw new Error(`Failed to update booking: ${error.message || error}`);
+  }
+};
+
+
+
+

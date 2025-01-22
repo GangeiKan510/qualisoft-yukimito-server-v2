@@ -10,7 +10,9 @@ import {
   getAllBookings,
   getAvailability,
   deleteBooking,
+  updateBookingDate
 } from '../../controllers/booking';
+import { BookingProps } from '../../types/booking';
 
 const router = Router();
 
@@ -102,6 +104,23 @@ router.delete('/delete-booking', async (req: Request, res: Response) => {
   }
 });
 
+router.put('/bookings/:bookingId', async (req, res) => {
+  const { bookingId } = req.params;
+  const updateData = req.body;
+
+  try {
+    const updatedBooking = await updateBookingDate(bookingId, updateData);
+    res.status(200).json({
+      message: 'Booking updated successfully',
+      booking: updatedBooking,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      message: 'Failed to update booking',
+      error: error.message,
+    });
+  }
+});
 router.get('/', (req: Request, res: Response) => {
   res.send('Web file router');
 });
