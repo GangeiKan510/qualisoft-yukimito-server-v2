@@ -10,7 +10,7 @@ import {
   getAllBookings,
   getAvailability,
   deleteBooking,
-  updateBookingDate
+  updateBookingDates,
 } from '../../controllers/booking';
 
 const router = Router();
@@ -104,27 +104,26 @@ router.delete('/delete-booking', async (req: Request, res: Response) => {
 });
 
 router.post('/update-booking-date', async (req, res) => {
-  const { bookingId, check_in_date, check_out_date, service } = req.body;
+  const { bookingId, check_in_date, check_out_date } = req.body;
 
   try {
-    if (!bookingId || !service || !check_in_date) {
-      return res.status(400).json({ error: 'Missing required fields: bookingId, serviceType, check_in_date' });
+    if (!bookingId || !check_in_date) {
+      return res.status(400).json({
+        error: 'Missing required fields: bookingId, check_in_date',
+      });
     }
 
-    if (!['Day Care', 'Errand Care', 'Home Care'].includes(service)) {
-      return res.status(400).json({ error: 'Invalid service type. Allowed values: day care, errand care, home care' });
-    }
-
-    const updatedBooking = await updateBookingDate(bookingId, {
-      service,
-      check_in_date,
-      check_out_date,
+    const updatedBooking = await updateBookingDates(bookingId, {
+      checkInDate: check_in_date,
+      checkOutDate: check_out_date,
     });
 
     return res.status(200).json(updatedBooking);
   } catch (error: any) {
     console.error('Error in /update-booking-date endpoint:', error);
-    return res.status(500).json({ error: error.message || 'An error occurred' });
+    return res.status(500).json({
+      error: error.message || 'An error occurred while updating booking dates',
+    });
   }
 });
 
