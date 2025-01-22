@@ -5,7 +5,7 @@ export const getBookings = async () => {
   try {
     const [regularBookings, instantBookings] = await Promise.all([
       prisma.booking.findMany({
-        include: { pets: true, user: true },
+        include: { pets: true, user: true, additionalServices: true },
       }),
       prisma.instantBooking.findMany(),
     ]);
@@ -296,7 +296,6 @@ export const addAdditionalService = async (
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
-      include: { pets: true },
     });
 
     if (!booking) {
@@ -312,18 +311,31 @@ export const addAdditionalService = async (
       'Large & X-Large': ['Large', 'XLarge'],
     };
 
+    const rawPetData = booking.raw_pet_data as { size: string }[];
+    if (!rawPetData || rawPetData.length === 0) {
+      throw new Error('No pets found in the booking.');
+    }
+
     let totalServiceAmount = 0;
-    booking.pets.forEach((pet) => {
+    const unmatchedPets: string[] = [];
+
+    rawPetData.forEach((pet) => {
       const petSizeCategory = Object.keys(petSizeGroups).find((group) =>
         petSizeGroups[group].includes(pet.size)
       );
       if (petSizeCategory && serviceRates[title][petSizeCategory]) {
         totalServiceAmount += serviceRates[title][petSizeCategory];
+      } else {
+        unmatchedPets.push(pet.size);
       }
     });
 
     if (totalServiceAmount === 0) {
-      throw new Error('No applicable rate found for the pets in this booking.');
+      throw new Error(
+        `No applicable rate found for the pets in this booking. Unmatched pet sizes: ${unmatchedPets.join(
+          ', '
+        )}`
+      );
     }
 
     await prisma.additionalService.create({
@@ -356,35 +368,40 @@ export const removeAdditionalService = async (
   serviceId: string
 ) => {
   try {
-    const service = await prisma.additionalService.findUnique({
-      where: { id: serviceId },
-      include: { booking: true },
-    });
+    return await prisma.$transaction(async (prisma) => {
+      const service = await prisma.additionalService.findUnique({
+        where: { id: serviceId },
+        include: { booking: true },
+      });
 
-    if (!service || service.bookingId !== bookingId) {
-      throw new Error(
-        'Additional service not found or does not belong to the specified booking'
+      if (!service || service.bookingId !== bookingId) {
+        throw new Error(
+          'Additional service not found or does not belong to the specified booking.'
+        );
+      }
+
+      const updatedTotalBill = Math.max(
+        0,
+        service.booking.total_bill - service.amount
       );
-    }
 
-    const updatedTotalBill = service.booking.total_bill - service.amount;
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: { total_bill: updatedTotalBill },
+      });
 
-    await prisma.booking.update({
-      where: { id: bookingId },
-      data: { total_bill: updatedTotalBill },
+      await prisma.additionalService.delete({
+        where: { id: serviceId },
+      });
+
+      return {
+        message: 'Additional service removed successfully.',
+        totalBill: updatedTotalBill,
+      };
     });
-
-    await prisma.additionalService.delete({
-      where: { id: serviceId },
-    });
-
-    return {
-      message: 'Additional service removed successfully',
-      totalBill: updatedTotalBill,
-    };
   } catch (error) {
     console.error('Error removing additional service:', error);
-    throw new Error('Failed to remove additional service');
+    throw new Error('Failed to remove additional service.');
   }
 };
 

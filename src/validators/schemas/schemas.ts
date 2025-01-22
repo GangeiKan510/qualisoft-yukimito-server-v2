@@ -92,7 +92,6 @@ export const UpdateBookingDatesSchema = z.object({
 export const AdditionalServiceSchema = z.object({
   bookingId: z.string().uuid(),
   title: z.string().min(1),
-  amount: z.number().min(1),
 });
 
 export const RemoveAdditionalServiceSchema = z.object({
