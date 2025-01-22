@@ -103,17 +103,13 @@ router.post(
   '/add-additional-service',
   validate(AdditionalServiceSchema),
   async (req: Request, res: Response) => {
-    const { bookingId, title, amount } = req.body;
+    const { bookingId, title } = req.body;
 
     try {
-      const updatedBooking = await addAdditionalService(
-        bookingId,
-        title,
-        amount
-      );
+      const result = await addAdditionalService(bookingId, title);
       res.status(200).json({
         message: 'Additional service added successfully.',
-        updatedBooking,
+        result,
       });
     } catch (error: any) {
       console.error('Error adding additional service:', error.message || error);

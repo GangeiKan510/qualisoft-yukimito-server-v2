@@ -280,27 +280,61 @@ export const checkInPets = async (bookingId: string) => {
 
 export const addAdditionalService = async (
   bookingId: string,
-  title: string,
-  amount: number
+  title: string
 ) => {
   try {
-    await prisma.additionalService.create({
-      data: {
-        title,
-        amount,
-        bookingId,
+    const serviceRates: Record<string, Record<string, number>> = {
+      'Errand Care': {
+        'Small & Medium': 175,
+        'Large & X-Large': 200,
       },
-    });
+      'Day Care': {
+        'Small & Medium': 250,
+        'Large & X-Large': 275,
+      },
+    };
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
+      include: { pets: true },
     });
 
     if (!booking) {
       throw new Error('Booking not found');
     }
 
-    const updatedTotalBill = booking.total_bill + amount;
+    if (!serviceRates[title]) {
+      throw new Error(`Service '${title}' is not recognized.`);
+    }
+
+    const petSizeGroups: Record<string, string[]> = {
+      'Small & Medium': ['XSmall', 'Small', 'Medium'],
+      'Large & X-Large': ['Large', 'XLarge'],
+    };
+
+    let totalServiceAmount = 0;
+    booking.pets.forEach((pet) => {
+      const petSizeCategory = Object.keys(petSizeGroups).find((group) =>
+        petSizeGroups[group].includes(pet.size)
+      );
+      if (petSizeCategory && serviceRates[title][petSizeCategory]) {
+        totalServiceAmount += serviceRates[title][petSizeCategory];
+      }
+    });
+
+    if (totalServiceAmount === 0) {
+      throw new Error('No applicable rate found for the pets in this booking.');
+    }
+
+    await prisma.additionalService.create({
+      data: {
+        title,
+        amount: totalServiceAmount,
+        bookingId,
+      },
+    });
+
+    const updatedTotalBill = booking.total_bill + totalServiceAmount;
 
     await prisma.booking.update({
       where: { id: bookingId },
@@ -308,7 +342,7 @@ export const addAdditionalService = async (
     });
 
     return {
-      message: 'Additional service added successfully',
+      message: `Added ${title} service successfully`,
       totalBill: updatedTotalBill,
     };
   } catch (error) {
