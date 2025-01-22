@@ -267,3 +267,112 @@ export const deleteBooking = async (bookingId: string) => {
     }
   }
 };
+
+export const updateBookingDate = async (
+  bookingId: string,
+  updateData: Partial<BookingProps> & { service: 'Day Care' | 'Errand Care' | 'Home Care' }
+) => {
+  try {
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { 
+        status: true, 
+        service: true, 
+        check_in_date: true,
+        pets: true, 
+      },
+    });
+
+    if (!existingBooking) {
+      throw new Error('Booking not found');
+    }
+
+    if (existingBooking.status === 'accepted' || existingBooking.status === 'rejected') {
+      throw new Error(`Cannot update booking. Current status: ${existingBooking.status}`);
+    }
+
+    const checkInDate = new Date(updateData.check_in_date || existingBooking.check_in_date);
+    if (isNaN(checkInDate.getTime())) {
+      throw new Error('Invalid check-in date');
+    }
+
+    let checkOutDate: Date;
+    let totalBill = 0;
+
+    if (updateData.service === 'Day Care') {
+      checkOutDate = new Date(checkInDate.getTime() + 10 * 60 * 60 * 1000);
+
+      existingBooking.pets?.forEach((pet: PetProps) => {
+        if (pet.size === 'Small' || pet.size === 'Medium') {
+          totalBill += 250;
+        } else if (pet.size === 'Large' || pet.size === 'XLarge') {
+          totalBill += 275;
+        }
+      });
+      
+    } else if (updateData.service === 'Errand Care') {
+      checkOutDate = new Date(checkInDate.getTime() + 4 * 60 * 60 * 1000);
+
+      existingBooking.pets?.forEach((pet: PetProps) => {
+        if (pet.size === 'Small' || pet.size === 'Medium') {
+          totalBill += 175;
+        } else if (pet.size === 'Large' || pet.size === 'XLarge') {
+          totalBill += 200;
+        }
+      });
+
+    } else if (updateData.service === 'Home Care') {
+      if (!updateData.check_out_date) {
+        throw new Error('Check-out date is required for Home Care');
+      }
+      checkOutDate = new Date(updateData.check_out_date);
+      if (isNaN(checkOutDate.getTime())) {
+        throw new Error('Invalid check-out date');
+      }
+
+      const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+      const numberOfDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+      const homeCareRates: Record<string, number> = {
+        XSmall: 425,
+        Small: 475,
+        Medium: 525,
+        Large: 575,
+        XLarge: 650,
+      };
+
+      existingBooking.pets?.forEach((pet: PetProps) => {
+        const rate = homeCareRates[pet.size];
+        if (rate) {
+          totalBill += rate * numberOfDays;
+        } else {
+          console.error(`Invalid pet size: ${pet.size}`);
+        }
+      });
+    } else {
+      throw new Error('Invalid service type');
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        check_in_date: checkInDate.toISOString(),
+        check_out_date: checkOutDate.toISOString(),
+        total_bill: totalBill,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+
+    return updatedBooking;
+  } catch (error: any) {
+    console.error('Error updating booking:', error);
+    throw new Error(`Failed to update booking: ${error.message || error}`);
+  }
+};
+
+
+
+
+
+
+
