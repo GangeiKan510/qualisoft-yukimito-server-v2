@@ -12,7 +12,6 @@ import {
   deleteBooking,
   updateBookingDate
 } from '../../controllers/booking';
-import { BookingProps } from '../../types/booking';
 
 const router = Router();
 
